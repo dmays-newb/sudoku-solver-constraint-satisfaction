@@ -70,6 +70,7 @@ def check_row(puzzle, index, array):
     return temp_array
 
 # Check local 3x3 box
+# Return list of numbers which are NOT in the same local 3x3 box
 def check_box(puzzle, index, array):
     boxes = [
         [0, 1, 2, 9, 10, 11, 18, 19, 20],
@@ -100,7 +101,7 @@ def check_box(puzzle, index, array):
             temp_array.remove(int(numb))
     return temp_array
 
-# Get possible actions for a given blank space
+# Get possible numbers for a given blank space
 def get_possible_numbers(puzzle, index):
     options = [i for i in range(1, 10)]
     # check column
