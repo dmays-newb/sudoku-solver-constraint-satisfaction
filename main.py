@@ -112,18 +112,41 @@ def get_possible_numbers(puzzle, index):
     options = check_box(puzzle, index, options)
     return options
 
+def naive_backtrack(input_puzzle):
+
+    # Consider saving a list of puzzles to attempt -> Do this like DFS
+
+
+
+    blanks = []
+    blanks = get_blanks(input_puzzle)
+    if len(blanks) == 0:
+        return input_puzzle
+
+    possible_actions = []
+    puzzle = copy.deepcopy(input_puzzle)
+
+
+    possible_actions.append(get_possible_numbers(puzzle, blanks[0]))
+
+
+    # ! if possible_actions is empty
+    if len(possible_actions) != 0:
+        for action in possible_actions[0]:
+            puzzle[blanks[0]] = str(action)
+            return naive_backtrack(puzzle)
+
+
+
 # Run program:
 # Get original in an array for comparison
 # Get list of blank tiles
 # For each blank generate a list of available numbers
 def main():
     original_puzzle = []
-    possible_actions = [] # Arrays of possible states for a each blank space
-    blanks = []
     parse_file(original_puzzle)
-    blanks = get_blanks(original_puzzle)
-    for space in blanks:
-        possible_actions.append(get_possible_numbers(original_puzzle, space))
+    completed_puzzle = naive_backtrack(original_puzzle)
+    solution_output(completed_puzzle)
 
 # Naive backtracking algorithm - Starting with first available blank and working in linear fashion
 
