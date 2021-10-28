@@ -1,4 +1,4 @@
-import sys, copy
+import sys, copy, time
 
 # Parse Sudoku data file
 def parse_file(puzzle):
@@ -22,6 +22,7 @@ def file_to_array(file, puzzle):
 
 # Provide solved puzzle via terminal output
 def solution_output(puzzle):
+    print("Here is your solved puzzle:")
     for i in range(0, 81):
         if i % 9 == 0:
             sys.stdout.write('\n')
@@ -113,29 +114,25 @@ def get_possible_numbers(puzzle, index):
     return options
 
 def naive_backtrack(input_puzzle):
-
-    # Consider saving a list of puzzles to attempt -> Do this like DFS
-
-
-
     blanks = []
+    possible_actions = []
+
     blanks = get_blanks(input_puzzle)
     if len(blanks) == 0:
-        return input_puzzle
+        solution_output(input_puzzle)
+        return
 
-    possible_actions = []
     puzzle = copy.deepcopy(input_puzzle)
 
-
-    possible_actions.append(get_possible_numbers(puzzle, blanks[0]))
-
+    temp_possible = get_possible_numbers(puzzle, blanks[0])
+    for temp in temp_possible:
+        possible_actions.append(temp)
 
     # ! if possible_actions is empty
     if len(possible_actions) != 0:
-        for action in possible_actions[0]:
+        for action in possible_actions:
             puzzle[blanks[0]] = str(action)
-            return naive_backtrack(puzzle)
-
+            naive_backtrack(puzzle)
 
 
 # Run program:
@@ -145,8 +142,14 @@ def naive_backtrack(input_puzzle):
 def main():
     original_puzzle = []
     parse_file(original_puzzle)
-    completed_puzzle = naive_backtrack(original_puzzle)
-    solution_output(completed_puzzle)
+    naive_start = time.time()
+    naive_backtrack(original_puzzle)
+    print("\n\nCompletion Time (seconds): ", time.time() - naive_start)
+
+    # csp_start = time.time()
+    # csp_backtrack(original_puzzle)
+    # print("\n\nCompletion Time (seconds): ", time.time() - csp_start)
+
 
 # Naive backtracking algorithm - Starting with first available blank and working in linear fashion
 
