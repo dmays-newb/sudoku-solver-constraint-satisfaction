@@ -1,22 +1,10 @@
-import sys, copy, time, random
+import sys, copy, time
 import constants
 from operator import itemgetter
 
-# boxes = [
-#     [0, 1, 2, 9, 10, 11, 18, 19, 20],
-#     [3, 4, 5, 12, 13, 14, 21, 22, 23],
-#     [6, 7, 8, 15, 16, 17, 24, 25, 26],
-#     [27, 28, 29, 36, 37, 38, 45, 46, 47],
-#     [30, 31, 32, 39, 40, 41, 48, 49, 50],
-#     [33, 34, 35, 42, 43, 44, 51, 52, 53],
-#     [54, 55, 56, 63, 64, 65, 72, 73, 74],
-#     [57, 58, 59, 66, 67, 68, 75, 76, 77],
-#     [60, 61, 62, 69, 70, 71, 78, 79, 80]
-# ]
-
 # Parse Sudoku data file
 def parse_file(puzzle):
-    for arg in sys.argv[1:]:
+    for arg in sys.argv[2:]:
         try:
             puzzle_file = open(arg, 'r')
         except OSError:
@@ -43,6 +31,7 @@ def solution_output(puzzle):
         sys.stdout.write(puzzle[i])
 
 # get blank spaces
+# return integer array of indexes of blanks (0) in puzzle
 def get_blanks(puzzle):
     temp_puzzle = copy.deepcopy(puzzle)
     blanks = []
@@ -99,7 +88,6 @@ def check_row(puzzle, index, array):
 # Return list of numbers which are NOT in the same local 3x3 box
 def check_box(puzzle, index, array):
     box_index = get_box(index)
-
     temp_array = copy.deepcopy(array)
     unavailable_numbs = []
     for space in constants.BOXES[box_index]:
@@ -111,7 +99,7 @@ def check_box(puzzle, index, array):
             temp_array.remove(int(numb))
     return temp_array
 
-
+# returns count of all other blanks in same local box as index
 def blanks_in_box(puzzle, index, box_index):
     # start with neg one to account for blank at index
     count = -1
@@ -120,6 +108,7 @@ def blanks_in_box(puzzle, index, box_index):
             count = count + 1
     return count
 
+# returns count of all other blanks in row minus those in same local box as index
 def blanks_in_row(puzzle, index, box_index):
     count = 0
     b = index % 9
@@ -132,6 +121,7 @@ def blanks_in_row(puzzle, index, box_index):
                 count = count + 1
     return count
 
+# returns count of all other blanks in column minus those in same local box as index
 def blanks_in_column(puzzle, index, box_index):
     count = 0
     ignore_box = constants.BOXES[box_index]
@@ -155,13 +145,17 @@ def get_possible_numbers(puzzle, index):
     options = check_box(puzzle, index, options)
     return options
 
-def naive_backtrack(input_puzzle):
+# naive backtrack algorithm
+# works through variable and value choices in sequential order
+# prints solved puzzle when number of blanks == 0
+def naive_backtrack(input_puzzle, naive_time):
     blanks = []
     possible_actions = []
 
     blanks = get_blanks(input_puzzle)
     if len(blanks) == 0:
         solution_output(input_puzzle)
+        print("\n\nNaive Backtrack -- Completion Time (seconds): ", time.time() - naive_time)
         return
 
     puzzle = copy.deepcopy(input_puzzle)
@@ -174,7 +168,7 @@ def naive_backtrack(input_puzzle):
     if len(possible_actions) != 0:
         for action in possible_actions:
             puzzle[blanks[0]] = str(action)
-            naive_backtrack(puzzle)
+            naive_backtrack(puzzle, naive_time)
 
 # Get degree of connectivity/constraints with other blanks
 # Return integer
@@ -184,7 +178,6 @@ def get_degree(input_puzzle, index):
     count = count + blanks_in_box(input_puzzle, index, box_index)
     count = count + blanks_in_row(input_puzzle, index, box_index)
     count = count + blanks_in_column(input_puzzle, index, box_index)
-
     return count
 
 # Take unsorted potential values and sort by least constraining first
@@ -211,9 +204,12 @@ def least_constraining_sort(input_puzzle, index, potential_values):
     sorting_list.sort(key=itemgetter(1), reverse=True)
     sorted_list, sum_list = zip(*sorting_list)
 
-
     return sorted_list
 
+# csp algorithm which incorporates: MRV and Degree Heuristic for variable selections,
+# Chooses least constraining values for each variable
+# Forward checks for no possible values for upcoming variables
+# prints solved puzzle when number of blanks == 0
 def csp_algorithm(input_puzzle, start_time):
     possible_actions = []
     numb_actions = []
@@ -222,7 +218,7 @@ def csp_algorithm(input_puzzle, start_time):
     blanks = get_blanks(input_puzzle)
     if len(blanks) == 0:
         solution_output(input_puzzle)
-        print("\n\nCompletion Time (seconds): ", time.time() - start_time)
+        print("\n\nCSP -- Completion Time (seconds): ", time.time() - start_time)
         return
 
     for blank in blanks:
@@ -251,18 +247,20 @@ def csp_algorithm(input_puzzle, start_time):
             csp_algorithm(puzzle, start_time)
 
 # Run program:
-# Get original in an array for comparison
-# Get list of blank tiles
-# For each blank generate a list of available numbers
+# Build puzzle
 def main():
     original_puzzle = []
     parse_file(original_puzzle)
-    naive_start = time.time()
-    naive_backtrack(original_puzzle)
-    print("\n\nCompletion Time (seconds): ", time.time() - naive_start)
 
-    csp_start = time.time()
-    csp_algorithm(original_puzzle, csp_start)
+    alg_choice = sys.argv[1]
+    if alg_choice == 'n':
+        naive_start = time.time()
+        naive_backtrack(original_puzzle, naive_start)
+    elif alg_choice == 'c':
+        csp_start = time.time()
+        csp_algorithm(original_puzzle, csp_start)
+    else:
+        print("Unrecognized algorithm choice. Try again with either 'n' or 'c' as your first argument.")
 
 
 main()
